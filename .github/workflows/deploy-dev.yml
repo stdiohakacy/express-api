@@ -1,0 +1,12 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches: ["develop"]
+
+jobs:
+  backend-image:
+    uses: ./.github/workflows/job-build-push-image.yml
+    with:
+      environment: dev
+      ref: develop
