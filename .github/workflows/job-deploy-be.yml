@@ -34,8 +34,8 @@ jobs:
         run: |
           set -e
           echo "Applying Kubernetes manifests..."
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
+          kubectl apply -f k8s/express-api-depl.yaml
+          kubectl apply -f k8s/express-api-srv.yaml
 
       # - name: Restart Deployment (Rolling Update)
       #   run: |
