@@ -82,8 +82,3 @@ jobs:
 
           echo "Pushing release image"
           docker push $IMAGE_NAME:$TAG || { echo "Push failed!"; exit 1; }
-
-      - name: Update Deployment with new SHA
-        run: |
-          set -e
-          kubectl set image deployment/express-api-depl express-api=asd2321s2/express-api:${{ github.sha }} -n default
