@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: express-api
-          image: asd2321s2/express-api:{{ GITHUB_SHA }}
+          image: asd2321s2/express-api:latest
           imagePullPolicy: Always #  Avoid pod still using the old image because it is cached
           ports:
             - containerPort: 3000
