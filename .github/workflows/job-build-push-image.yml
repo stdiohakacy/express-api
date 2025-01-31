@@ -9,11 +9,16 @@ on:
       ref:
         required: true
         type: string
+    secrets:
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_PASSWORD:
+        required: true
 
 jobs:
   build:
     name: Build docker image ${{ inputs.environment }}
-    environment: dev
+    environment: ${{ inputs.environment }}
     runs-on: self-hosted
 
     steps:
