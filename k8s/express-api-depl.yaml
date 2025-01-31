@@ -28,7 +28,7 @@ spec:
               cpu: "250m"
           env:
             - name: MONGODB_URL
-              value: "mongodb://admin:password@mongo-service.default.svc.cluster.local:27017"
+              value: "mongodb://admin:password@express-mongo-srv.default.svc.cluster.local:27017"
             - name: JWT_SECRET
               value: "thisisasamplesecret"
             - name: JWT_ACCESS_EXPIRATION_MINUTES
