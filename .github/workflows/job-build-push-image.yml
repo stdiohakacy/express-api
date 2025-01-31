@@ -53,11 +53,17 @@ jobs:
           IMAGE_NAME=asd2321s2/express-api
           TAG=${{ github.sha }}
 
+          if ! docker images | grep -q "$IMAGE_NAME"; then
+            echo "Error: Image $IMAGE_NAME:$TAG not found! Ensure build step ran correctly."
+            exit 1
+          fi
+
           echo "Tagging latest image"
           docker tag $IMAGE_NAME:$TAG $IMAGE_NAME:latest || { echo "Tagging failed!"; exit 1; }
 
           echo "Pushing latest image"
           docker push $IMAGE_NAME:latest || { echo "Push failed!"; exit 1; }
+
 
       - name: Tag and push release versions
         if: startsWith(github.ref, 'refs/tags/')
