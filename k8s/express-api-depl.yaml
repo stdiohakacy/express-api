@@ -16,7 +16,7 @@ spec:
       containers:
         - name: express-api
           image: asd2321s2/express-api:latest
-          imagePullPolicy: Always #  Avoid pod still using the old image because it is cached
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
           resources:
@@ -26,3 +26,26 @@ spec:
             requests:
               memory: "64Mi"
               cpu: "250m"
+          env:
+            - name: MONGODB_URL
+              value: "mongodb://admin:password@mongo-service.default.svc.cluster.local:27017"
+            - name: JWT_SECRET
+              value: "thisisasamplesecret"
+            - name: JWT_ACCESS_EXPIRATION_MINUTES
+              value: "30"
+            - name: JWT_REFRESH_EXPIRATION_DAYS
+              value: "30"
+            - name: JWT_RESET_PASSWORD_EXPIRATION_MINUTES
+              value: "10"
+            - name: JWT_VERIFY_EMAIL_EXPIRATION_MINUTES
+              value: "10"
+            - name: SMTP_HOST
+              value: "smtp.mailtrap.io"
+            - name: SMTP_PORT
+              value: "2525"
+            - name: SMTP_USERNAME
+              value: "your-mailtrap-username"
+            - name: SMTP_PASSWORD
+              value: "your-mailtrap-password"
+            - name: EMAIL_FROM
+              value: "support@yourapp.com"
