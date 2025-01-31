@@ -1,0 +1,52 @@
+name: Job Deploy BE to Minikube
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy to Minikube
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # - name: Set up kubectl
+      #   uses: azure/setup-kubectl@v3
+      #   with:
+      #     version: "latest"
+
+      # - name: Configure kubeconfig
+      #   run: |
+      #     set -e
+      #     echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > $HOME/.kube/config
+      #     chmod 600 $HOME/.kube/config
+
+      - name: Apply Kubernetes manifests
+        run: |
+          set -e
+          echo "Applying Kubernetes manifests..."
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+
+      # - name: Restart Deployment (Rolling Update)
+      #   run: |
+      #     set -e
+      #     echo "Restarting deployment..."
+      #     kubectl rollout restart deployment/express-api -n default
+      #     kubectl rollout status deployment/express-api -n default
+
+      # - name: Verify deployment
+      #   run: |
+      #     set -e
+      #     echo "Checking pod status..."
+      #     kubectl get pods -n default
+      #     kubectl get svc -n default

@@ -13,3 +13,11 @@ jobs:
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+  sync-repository:
+    uses: ./.github/workflows/job-deploy-be.yml
+    needs: backend-image
+    with:
+      environment: dev
+      ref: develop
+
