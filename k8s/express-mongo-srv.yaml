@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: express-mongo-srv
-  namespace: default
+  namespace: express-dev
 spec:
   clusterIP: None  # Headless Service để StatefulSet có thể truy cập qua DNS cố định
   selector:

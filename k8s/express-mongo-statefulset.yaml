@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: express-mongo-statefulset
-  namespace: default
+  namespace: express-dev
 spec:
   serviceName: express-mongo-srv
   replicas: 3
@@ -53,7 +53,7 @@ spec:
           # livenessProbe:
           #   exec:
           #     command:
-          #       - mongosh
+          #       - mongo
           #       - --eval
           #       - "db.adminCommand('ping')"
           #   initialDelaySeconds: 30
@@ -61,7 +61,7 @@ spec:
           # readinessProbe:
           #   exec:
           #     command:
-          #       - mongosh
+          #       - mongo
           #       - --eval
           #       - "rs.status()"
           #   initialDelaySeconds: 30

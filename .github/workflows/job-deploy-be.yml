@@ -34,6 +34,7 @@ jobs:
         run: |
           set -e
           echo "Applying Kubernetes manifests..."
+          kubectl apply -f k8s/express-namespace.yaml
           kubectl apply -f k8s/express-mongo-secret.yaml
           kubectl apply -f k8s/express-mongo-pvc.yaml
           kubectl apply -f k8s/express-mongo-statefulset.yaml
