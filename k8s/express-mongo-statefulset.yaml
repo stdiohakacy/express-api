@@ -4,8 +4,8 @@ metadata:
   name: express-mongo-statefulset
   namespace: default
 spec:
-  serviceName: express-mongo-srv  # Headless Service để các Pod có DNS cố định
-  replicas: 3  # Số lượng Pod MongoDB
+  serviceName: express-mongo-srv
+  replicas: 3
   selector:
     matchLabels:
       app: express-mongo
@@ -14,7 +14,7 @@ spec:
       labels:
         app: express-mongo
     spec:
-      terminationGracePeriodSeconds: 10  # Đảm bảo MongoDB có thời gian shutdown an toàn
+      terminationGracePeriodSeconds: 10
       containers:
         - name: express-mongo
           image: mongo:latest
@@ -24,20 +24,48 @@ spec:
             - name: MONGO_INITDB_ROOT_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: express-mongo-secret
                   key: MONGO_INITDB_ROOT_USERNAME
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
+                  name: express-mongo-secret
                   key: MONGO_INITDB_ROOT_PASSWORD
           volumeMounts:
             - name: mongo-data
               mountPath: /data/db
-      volumes:
-        - name: mongo-data
-          persistentVolumeClaim:
-            claimName: express-mongo-pvc
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              mongod --replSet rs0 --bind_ip_all & sleep 10
+              if [[ "$(hostname)" == "express-mongo-statefulset-0" ]]; then
+                mongo --eval "
+                rs.initiate({
+                  _id: 'rs0',
+                  members: [
+                    { _id: 0, host: 'express-mongo-statefulset-0.express-mongo-srv.default.svc.cluster.local:27017' },
+                    { _id: 1, host: 'express-mongo-statefulset-1.express-mongo-srv.default.svc.cluster.local:27017' },
+                    { _id: 2, host: 'express-mongo-statefulset-2.express-mongo-srv.default.svc.cluster.local:27017' }
+                  ]
+                })"
+              fi
+              tail -f /dev/null
+          # livenessProbe:
+          #   exec:
+          #     command:
+          #       - mongosh
+          #       - --eval
+          #       - "db.adminCommand('ping')"
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
+          # readinessProbe:
+          #   exec:
+          #     command:
+          #       - mongosh
+          #       - --eval
+          #       - "rs.status()"
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
   volumeClaimTemplates:
     - metadata:
         name: mongo-data
