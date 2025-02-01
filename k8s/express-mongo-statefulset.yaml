@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: express-mongo-statefulset
+  namespace: default
+spec:
+  serviceName: express-mongo-srv  # Headless Service để các Pod có DNS cố định
+  replicas: 3  # Số lượng Pod MongoDB
+  selector:
+    matchLabels:
+      app: express-mongo
+  template:
+    metadata:
+      labels:
+        app: express-mongo
+    spec:
+      terminationGracePeriodSeconds: 10  # Đảm bảo MongoDB có thời gian shutdown an toàn
+      containers:
+        - name: express-mongo
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+      volumes:
+        - name: mongo-data
+          persistentVolumeClaim:
+            claimName: express-mongo-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi

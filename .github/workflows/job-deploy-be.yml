@@ -36,7 +36,7 @@ jobs:
           echo "Applying Kubernetes manifests..."
           kubectl apply -f k8s/express-mongo-secret.yaml
           kubectl apply -f k8s/express-mongo-pvc.yaml
-          kubectl apply -f k8s/express-mongo-depl.yaml
+          kubectl apply -f k8s/express-mongo-statefulset.yaml
           kubectl apply -f k8s/express-mongo-srv.yaml
           kubectl apply -f k8s/express-api-secret.yaml
           kubectl apply -f k8s/express-api-depl.yaml

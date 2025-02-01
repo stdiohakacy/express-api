@@ -4,6 +4,7 @@ metadata:
   name: express-mongo-srv
   namespace: default
 spec:
+  clusterIP: None  # Headless Service để StatefulSet có thể truy cập qua DNS cố định
   selector:
     app: express-mongo
   ports:
