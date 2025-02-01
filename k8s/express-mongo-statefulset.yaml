@@ -39,15 +39,21 @@ spec:
             - |
               mongod --replSet rs0 --bind_ip_all & sleep 10
               if [[ "$(hostname)" == "express-mongo-statefulset-0" ]]; then
-                mongo --eval "
+                echo "Initializing MongoDB Replica Set..."
+                RETRIES=5
+                until mongo --eval "
                 rs.initiate({
                   _id: 'rs0',
                   members: [
-                    { _id: 0, host: 'express-mongo-statefulset-0.express-mongo-srv.default.svc.cluster.local:27017' },
-                    { _id: 1, host: 'express-mongo-statefulset-1.express-mongo-srv.default.svc.cluster.local:27017' },
-                    { _id: 2, host: 'express-mongo-statefulset-2.express-mongo-srv.default.svc.cluster.local:27017' }
+                    { _id: 0, host: 'express-mongo-statefulset-0.express-mongo-srv.express-dev.svc.cluster.local:27017' },
+                    { _id: 1, host: 'express-mongo-statefulset-1.express-mongo-srv.express-dev.svc.cluster.local:27017' },
+                    { _id: 2, host: 'express-mongo-statefulset-2.express-mongo-srv.express-dev.svc.cluster.local:27017' }
                   ]
-                })"
+                })" || [[ $((RETRIES--)) -eq 0 ]]
+                do
+                  echo "Retrying replica set initialization..."
+                  sleep 5
+                done
               fi
               tail -f /dev/null
           # livenessProbe:
