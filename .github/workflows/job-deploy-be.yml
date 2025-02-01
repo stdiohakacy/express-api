@@ -19,48 +19,150 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # - name: Set up kubectl
-      #   uses: azure/setup-kubectl@v3
-      #   with:
-      #     version: "latest"
+      - name: Ensure Minikube is Running
+        run: |
+          set -e
+          if ! minikube status | grep -q "Running"; then
+            echo "Minikube is not running. Starting Minikube..."
+            minikube start --cpus=6 --memory=12288 --driver=docker --addons=ingress
+          else
+            echo "✅ Minikube is already running."
+          fi
+          echo "Current Minikube Status:"
+          minikube status
+
+      - name: Set up kubectl
+        run: |
+          echo "⏳ Configuring kubectl for Minikube..."
+          kubectl version --client
+          minikube update-context
+          echo "✅ Kubectl is configured."
 
       # - name: Configure kubeconfig
       #   run: |
       #     set -e
+      #     echo "⏳ Setting up Kubernetes config..."
       #     echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > $HOME/.kube/config
       #     chmod 600 $HOME/.kube/config
+      #     echo "✅ Kubernetes config is set up."
 
-      - name: Apply Kubernetes manifests
+      - name: Apply Kubernetes Namespaces
         run: |
           set -e
-          echo "Applying Kubernetes manifests..."
-          kubectl apply -f k8s/express-namespace.yaml
-          kubectl apply -f k8s/express-mongo-secret.yaml
-          kubectl apply -f k8s/express-mongo-pvc.yaml
-          kubectl apply -f k8s/express-mongo-statefulset.yaml
-          kubectl apply -f k8s/express-mongo-srv.yaml
-          kubectl apply -f k8s/express-api-secret.yaml
-          kubectl apply -f k8s/express-api-depl.yaml
-          kubectl apply -f k8s/express-api-srv.yaml
+          echo "⏳ Applying Kubernetes namespaces..."
+          kubectl apply -f k8s/express-namespace.yaml --wait
+          echo "✅ Namespaces applied."
+
+      - name: Apply Secrets
+        run: |
+          set -e
+          echo "⏳ Applying secrets..."
+          kubectl apply -f k8s/express-mongo-secret.yaml --wait
+          kubectl apply -f k8s/express-api-secret.yaml --wait
+          kubectl apply -f k8s/express-datadog-secret.yaml --wait
+          echo "✅ Secrets applied."
+
+      - name: Apply RBAC Configurations
+        run: |
+          set -e
+          echo "⏳ Applying RBAC configurations..."
+          kubectl apply -f k8s/express-datadog-clusterrole.yaml --wait
+          kubectl apply -f k8s/express-datadog-serviceaccount.yaml --wait
+          kubectl apply -f k8s/express-datadog-rolebinding.yaml --wait
+          echo "✅ RBAC configurations applied."
+
+      - name: Apply Persistent Volumes
+        run: |
+          set -e
+          echo "⏳ Applying PersistentVolumeClaims..."
+          kubectl apply -f k8s/express-mongo-pvc.yaml --wait
+          echo "✅ Persistent Volumes applied."
+
+      - name: Apply StatefulSets
+        run: |
+          set -e
+          echo "⏳ Applying MongoDB StatefulSet..."
+          kubectl apply -f k8s/express-mongo-statefulset.yaml --wait
+          kubectl apply -f k8s/express-mongo-srv.yaml --wait
+          echo "✅ MongoDB StatefulSet applied."
+
+      - name: Apply Deployments & Services
+        run: |
+          set -e
+          echo "⏳ Deploying Express API..."
+          kubectl apply -f k8s/express-api-depl.yaml --wait
+          kubectl apply -f k8s/express-api-srv.yaml --wait
+          echo "✅ Express API Deployment applied."
+
+      - name: Apply DaemonSets (Datadog)
+        run: |
+          set -e
+          echo "⏳ Deploying Datadog Agent..."
+          kubectl apply -f k8s/express-datadog-daemonset.yaml --wait
+          echo "✅ Datadog DaemonSet applied."
 
       - name: Restart Deployment (Rolling Update)
         run: |
           set -e
-          echo "Restarting deployment..."
+          echo "🔄 Restarting Express API deployment..."
           kubectl rollout restart deployment/express-api-depl -n default
-          kubectl rollout status deployment/express-api-depl -n default
+          kubectl rollout status deployment/express-api-depl -n default --timeout=120s || {
+            echo "🚨 Deployment rollout failed, rolling back!";
+            kubectl rollout undo deployment/express-api-depl -n default;
+            exit 1;
+          }
+          echo "✅ Rolling update successful."
 
-      - name: Verify deployment
+      - name: Verify Deployment Health
         run: |
           set -e
-          echo "Checking pod status..."
-          kubectl get pods -n default
+          echo "🔍 Checking pod and service status..."
+          kubectl get pods -n default -o wide
           kubectl get svc -n default
+          kubectl get endpoints -n default
+          kubectl describe deployment express-api-depl -n default
+          echo "✅ Deployment verification complete."
+
+      - name: Validate Logs and Connectivity
+        run: |
+          set -e
+          echo "🔍 Checking logs for Express API..."
+          kubectl logs --selector=app=express-api -n default --tail=20
+          echo "✅ Logs retrieved."
+
+      - name: Ensure Services are Reachable
+        run: |
+          set -e
+          echo "🔍 Checking API availability..."
+          minikube service express-api-srv --namespace default --url
+          echo "✅ API service is reachable."
+
+
+# kubectl apply -f k8s/express-namespace.yaml
+# kubectl apply -f k8s/express-mongo-secret.yaml
+# kubectl apply -f k8s/express-api-secret.yaml
+# kubectl apply -f k8s/express-datadog-secret.yaml
+# kubectl apply -f k8s/express-datadog-clusterrole.yaml
+# kubectl apply -f k8s/express-datadog-serviceaccount.yaml
+# kubectl apply -f k8s/express-datadog-rolebinding.yaml
+# kubectl apply -f k8s/express-mongo-pvc.yaml
+# kubectl apply -f k8s/express-mongo-statefulset.yaml
+# kubectl apply -f k8s/express-mongo-srv.yaml
+# kubectl apply -f k8s/express-api-depl.yaml
+# kubectl apply -f k8s/express-api-srv.yaml
+# kubectl apply -f k8s/express-datadog-daemonset.yaml
+
 
 # kubectl delete -f k8s/express-mongo-secret.yaml
+# kubectl delete -f k8s/express-api-secret.yaml
+# kubectl delete -f k8s/express-datadog-secret.yaml
+# kubectl delete -f k8s/express-datadog-clusterrole.yaml
+# kubectl delete -f k8s/express-datadog-serviceaccount.yaml
+# kubectl delete -f k8s/express-datadog-rolebinding.yaml
 # kubectl delete -f k8s/express-mongo-pvc.yaml
 # kubectl delete -f k8s/express-mongo-statefulset.yaml
 # kubectl delete -f k8s/express-mongo-srv.yaml
-# kubectl delete -f k8s/express-api-secret.yaml
 # kubectl delete -f k8s/express-api-depl.yaml
 # kubectl delete -f k8s/express-api-srv.yaml
+# kubectl delete -f k8s/express-datadog-daemonset.yaml
+# kubectl delete -f k8s/express-namespace.yaml

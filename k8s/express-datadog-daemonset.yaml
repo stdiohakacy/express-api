@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: express-datadog-agent
+  namespace: express-monitoring
+spec:
+  selector:
+    matchLabels:
+      app: datadog-agent
+  template:
+    metadata:
+      labels:
+        app: datadog-agent
+    spec:
+      serviceAccountName: express-datadog-agent-serviceaccount
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          effect: "NoSchedule"
+      containers:
+        - name: datadog-agent
+          image: gcr.io/datadoghq/agent:7.37.1
+          imagePullPolicy: Always
+          env:
+            - name: DD_KUBELET_TLS_VERIFY
+              value: "false"
+            - name: DD_KUBELET_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: DD_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: express-datadog-secret
+                  key: DD_API_KEY
+            - name: DD_SITE
+              value: "us5.datadoghq.com"
+            - name: DD_KUBERNETES_KUBELET_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: DD_KUBERNETES_NAMESPACE
+              value: "express-dev"
+            - name: DD_LOGS_ENABLED
+              value: "true"
+            - name: DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL
+              value: "true"
+            - name: DD_CLUSTER_NAME
+              value: "minikube-cluster"
+          volumeMounts:
+            - name: docker-containers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: dockersock
+              mountPath: /var/run/docker.sock
+              readOnly: true
+      volumes:
+        - name: docker-containers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
