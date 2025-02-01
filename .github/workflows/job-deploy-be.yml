@@ -34,9 +34,14 @@ jobs:
         run: |
           set -e
           echo "Applying Kubernetes manifests..."
+          kubectl apply -f k8s/express-mongo-secret.yaml
+          kubectl apply -f k8s/express-mongo-pvc.yaml
+          kubectl apply -f k8s/express-mongo-depl.yaml
+          kubectl apply -f k8s/express-mongo-srv.yaml
+          kubectl apply -f k8s/express-api-secret.yaml
           kubectl apply -f k8s/express-api-depl.yaml
           kubectl apply -f k8s/express-api-srv.yaml
-
+k
       # - name: Restart Deployment (Rolling Update)
       #   run: |
       #     set -e

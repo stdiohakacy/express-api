@@ -26,11 +26,39 @@ spec:
             requests:
               memory: "64Mi"
               cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
           env:
             - name: MONGODB_URL
-              value: "mongodb://admin:password@express-mongo-srv.default.svc.cluster.local:27017"
+              valueFrom:
+                secretKeyRef:
+                  name: express-api-secret
+                  key: MONGODB_URL
             - name: JWT_SECRET
-              value: "thisisasamplesecret"
+              valueFrom:
+                secretKeyRef:
+                  name: express-api-secret
+                  key: JWT_SECRET
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: express-api-secret
+                  key: SMTP_USERNAME
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: express-api-secret
+                  key: SMTP_PASSWORD
             - name: JWT_ACCESS_EXPIRATION_MINUTES
               value: "30"
             - name: JWT_REFRESH_EXPIRATION_DAYS
@@ -43,9 +71,5 @@ spec:
               value: "smtp.mailtrap.io"
             - name: SMTP_PORT
               value: "2525"
-            - name: SMTP_USERNAME
-              value: "your-mailtrap-username"
-            - name: SMTP_PASSWORD
-              value: "your-mailtrap-password"
             - name: EMAIL_FROM
               value: "support@yourapp.com"
