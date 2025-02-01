@@ -41,6 +41,7 @@ jobs:
           kubectl apply -f k8s/express-api-secret.yaml
           kubectl apply -f k8s/express-api-depl.yaml
           kubectl apply -f k8s/express-api-srv.yaml
+
       # - name: Restart Deployment (Rolling Update)
       #   run: |
       #     set -e

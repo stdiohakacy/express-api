@@ -28,13 +28,13 @@ spec:
               cpu: "250m"
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: /v1/docs
               port: 3000
             initialDelaySeconds: 10
             periodSeconds: 5
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: /v1/docs
               port: 3000
             initialDelaySeconds: 5
             periodSeconds: 5
