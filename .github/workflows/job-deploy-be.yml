@@ -105,10 +105,10 @@ jobs:
         run: |
           set -e
           echo "🔄 Restarting Express API deployment..."
-          kubectl rollout restart deployment/express-api-depl -n default
-          kubectl rollout status deployment/express-api-depl -n default --timeout=120s || {
+          kubectl rollout restart deployment/express-api-depl -n express-dev
+          kubectl rollout status deployment/express-api-depl -n express-dev --timeout=120s || {
             echo "🚨 Deployment rollout failed, rolling back!";
-            kubectl rollout undo deployment/express-api-depl -n default;
+            kubectl rollout undo deployment/express-api-depl -n express-dev;
             exit 1;
           }
           echo "✅ Rolling update successful."
@@ -117,24 +117,24 @@ jobs:
         run: |
           set -e
           echo "🔍 Checking pod and service status..."
-          kubectl get pods -n default -o wide
-          kubectl get svc -n default
-          kubectl get endpoints -n default
-          kubectl describe deployment express-api-depl -n default
+          kubectl get pods -n express-dev -o wide
+          kubectl get svc -n express-dev
+          kubectl get endpoints -n express-dev
+          kubectl describe deployment express-api-depl -n express-dev
           echo "✅ Deployment verification complete."
 
       - name: Validate Logs and Connectivity
         run: |
           set -e
           echo "🔍 Checking logs for Express API..."
-          kubectl logs --selector=app=express-api -n default --tail=20
+          kubectl logs --selector=app=express-api -n express-dev --tail=20
           echo "✅ Logs retrieved."
 
       - name: Ensure Services are Reachable
         run: |
           set -e
           echo "🔍 Checking API availability..."
-          minikube service express-api-srv --namespace default --url
+          minikube service express-api-srv --namespace express-dev --url
           echo "✅ API service is reachable."
 
 
