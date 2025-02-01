@@ -133,10 +133,21 @@ jobs:
       - name: Ensure Services are Reachable
         run: |
           set -e
-          echo "🔍 Checking API availability..."
-          minikube service express-api-srv --namespace express-dev --url
-          echo "✅ API service is reachable."
+          echo "🔍 Exposing Express API service via port-forward..."
 
+          kubectl port-forward svc/express-api-srv -n express-dev 8080:80 &
+
+          sleep 5
+
+          echo "🔍 Verifying Express API health check..."
+          if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/v1/docs | grep -q "200"; then
+            echo "✅ Express API is reachable."
+          else
+            echo "🚨 Express API is not reachable!"
+            exit 1
+          fi
+
+          pkill -f "kubectl port-forward"
 
 # kubectl apply -f k8s/express-namespace.yaml
 # kubectl apply -f k8s/express-mongo-secret.yaml
