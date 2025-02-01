@@ -42,16 +42,16 @@ jobs:
           kubectl apply -f k8s/express-api-depl.yaml
           kubectl apply -f k8s/express-api-srv.yaml
 
-      # - name: Restart Deployment (Rolling Update)
-      #   run: |
-      #     set -e
-      #     echo "Restarting deployment..."
-      #     kubectl rollout restart deployment/express-api -n default
-      #     kubectl rollout status deployment/express-api -n default
+      - name: Restart Deployment (Rolling Update)
+        run: |
+          set -e
+          echo "Restarting deployment..."
+          kubectl rollout restart deployment/express-api -n default
+          kubectl rollout status deployment/express-api -n default
 
-      # - name: Verify deployment
-      #   run: |
-      #     set -e
-      #     echo "Checking pod status..."
-      #     kubectl get pods -n default
-      #     kubectl get svc -n default
+      - name: Verify deployment
+        run: |
+          set -e
+          echo "Checking pod status..."
+          kubectl get pods -n default
+          kubectl get svc -n default
