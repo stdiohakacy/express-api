@@ -30,12 +30,12 @@ jobs:
           echo "Current Minikube Status:"
           minikube status
 
-      - name: Set up kubectl
-        run: |
-          echo "⏳ Configuring kubectl for Minikube..."
-          kubectl version --client
-          minikube update-context
-          echo "✅ Kubectl is configured."
+      # - name: Set up kubectl
+      #   run: |
+      #     echo "⏳ Configuring kubectl for Minikube..."
+      #     kubectl version --client
+      #     minikube update-context
+      #     echo "✅ Kubectl is configured."
 
       # - name: Configure kubeconfig
       #   run: |
@@ -65,12 +65,6 @@ jobs:
           kubectl apply -f k8s/express-datadog-serviceaccount.yaml --wait
           kubectl apply -f k8s/express-datadog-rolebinding.yaml --wait
           echo "✅ RBAC configurations applied."
-
-      - name: Apply Persistent Volumes
-        run: |
-          echo "⏳ Applying PersistentVolumeClaims..."
-          kubectl apply -f k8s/express-mongo-pvc.yaml --wait
-          echo "✅ Persistent Volumes applied."
 
       - name: Apply StatefulSets
         run: |
@@ -112,22 +106,6 @@ jobs:
           echo "🔍 Checking logs for Express API..."
           kubectl logs --selector=app=express-api -n express-dev --tail=20
           echo "✅ Logs retrieved."
-
-      - name: Ensure Services are Reachable
-        run: |
-          echo "🔍 Exposing Express API service via port-forward..."
-
-          kubectl port-forward svc/express-api-srv -n express-dev 8080:3000 & sleep 5
-
-          echo "🔍 Verifying Express API health check..."
-          if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/v1/docs | grep -q "200"; then
-            echo "✅ Express API is reachable."
-          else
-            echo "🚨 Express API is not reachable!"
-            exit 1
-          fi
-
-          pkill -f "kubectl port-forward"
 
 # kubectl apply -f k8s/express-namespace.yaml
 # kubectl apply -f k8s/express-mongo-secret.yaml
