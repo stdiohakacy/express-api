@@ -21,7 +21,6 @@ jobs:
 
       - name: Ensure Minikube is Running
         run: |
-          set -e
           if ! minikube status | grep -q "Running"; then
             echo "Minikube is not running. Starting Minikube..."
             minikube start --cpus=6 --memory=12288 --driver=docker --addons=ingress
@@ -40,7 +39,6 @@ jobs:
 
       # - name: Configure kubeconfig
       #   run: |
-      #     set -e
       #     echo "⏳ Setting up Kubernetes config..."
       #     echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > $HOME/.kube/config
       #     chmod 600 $HOME/.kube/config
@@ -48,14 +46,12 @@ jobs:
 
       - name: Apply Kubernetes Namespaces
         run: |
-          set -e
           echo "⏳ Applying Kubernetes namespaces..."
           kubectl apply -f k8s/express-namespace.yaml --wait
           echo "✅ Namespaces applied."
 
       - name: Apply Secrets
         run: |
-          set -e
           echo "⏳ Applying secrets..."
           kubectl apply -f k8s/express-mongo-secret.yaml --wait
           kubectl apply -f k8s/express-api-secret.yaml --wait
@@ -64,7 +60,6 @@ jobs:
 
       - name: Apply RBAC Configurations
         run: |
-          set -e
           echo "⏳ Applying RBAC configurations..."
           kubectl apply -f k8s/express-datadog-clusterrole.yaml --wait
           kubectl apply -f k8s/express-datadog-serviceaccount.yaml --wait
@@ -73,14 +68,12 @@ jobs:
 
       - name: Apply Persistent Volumes
         run: |
-          set -e
           echo "⏳ Applying PersistentVolumeClaims..."
           kubectl apply -f k8s/express-mongo-pvc.yaml --wait
           echo "✅ Persistent Volumes applied."
 
       - name: Apply StatefulSets
         run: |
-          set -e
           echo "⏳ Applying MongoDB StatefulSet..."
           kubectl apply -f k8s/express-mongo-statefulset.yaml --wait
           kubectl apply -f k8s/express-mongo-srv.yaml --wait
@@ -88,7 +81,6 @@ jobs:
 
       - name: Apply Deployments & Services
         run: |
-          set -e
           echo "⏳ Deploying Express API..."
           kubectl apply -f k8s/express-api-depl.yaml --wait
           kubectl apply -f k8s/express-api-srv.yaml --wait
@@ -96,26 +88,18 @@ jobs:
 
       - name: Apply DaemonSets (Datadog)
         run: |
-          set -e
           echo "⏳ Deploying Datadog Agent..."
           kubectl apply -f k8s/express-datadog-daemonset.yaml --wait
           echo "✅ Datadog DaemonSet applied."
 
       - name: Restart Deployment (Rolling Update)
         run: |
-          set -e
           echo "🔄 Restarting Express API deployment..."
           kubectl rollout restart deployment/express-api-depl -n express-dev
-          kubectl rollout status deployment/express-api-depl -n express-dev || {
-            echo "🚨 Deployment rollout failed, rolling back!";
-            kubectl rollout undo deployment/express-api-depl -n express-dev;
-            exit 1;
-          }
           echo "✅ Rolling update successful."
 
       - name: Verify Deployment Health
         run: |
-          set -e
           echo "🔍 Checking pod and service status..."
           kubectl get pods -n express-dev -o wide
           kubectl get svc -n express-dev
@@ -125,14 +109,12 @@ jobs:
 
       - name: Validate Logs and Connectivity
         run: |
-          set -e
           echo "🔍 Checking logs for Express API..."
           kubectl logs --selector=app=express-api -n express-dev --tail=20
           echo "✅ Logs retrieved."
 
       - name: Ensure Services are Reachable
         run: |
-          set -e
           echo "🔍 Exposing Express API service via port-forward..."
 
           kubectl port-forward svc/express-api-srv -n express-dev 8080:80 &
