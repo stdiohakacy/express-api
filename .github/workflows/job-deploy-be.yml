@@ -90,6 +90,7 @@ jobs:
         run: |
           echo "🔄 Restarting Express API deployment..."
           kubectl rollout restart deployment/express-api-depl -n express-dev
+          kubectl rollout status deployment/express-api-depl -n express-dev --timeout=30000
           echo "✅ Rolling update successful."
 
       - name: Verify Deployment Health
