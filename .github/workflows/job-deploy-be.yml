@@ -117,9 +117,7 @@ jobs:
         run: |
           echo "🔍 Exposing Express API service via port-forward..."
 
-          kubectl port-forward svc/express-api-srv -n express-dev 8080:80 &
-
-          sleep 5
+          kubectl port-forward svc/express-api-srv -n express-dev 8080:3000 & sleep 5
 
           echo "🔍 Verifying Express API health check..."
           if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/v1/docs | grep -q "200"; then
@@ -159,3 +157,12 @@ jobs:
 # kubectl delete -f k8s/express-api-srv.yaml
 # kubectl delete -f k8s/express-datadog-daemonset.yaml
 # kubectl delete -f k8s/express-namespace.yaml
+
+# kubectl apply -f k8s/express-namespace.yaml
+# kubectl apply -f k8s/express-mongo-secret.yaml
+# kubectl apply -f k8s/express-mongo-statefulset.yaml
+# kubectl apply -f k8s/express-mongo-srv.yaml
+
+# kubectl apply -f k8s/express-api-secret.yaml
+# kubectl apply -f k8s/express-api-depl.yaml
+# kubectl apply -f k8s/express-api-srv.yaml
